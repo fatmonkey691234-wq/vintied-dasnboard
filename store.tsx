@@ -6,7 +6,7 @@ interface DataContextType {
   purchases: Purchase[];
   sales: Sale[];
   isLoading: boolean;
-  error: string | null; // Added error state
+  error: string | null;
   addPurchase: (purchase: Purchase) => Promise<void>;
   addSale: (sale: Sale) => Promise<void>;
   deletePurchase: (id: string) => Promise<void>;
@@ -49,19 +49,37 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (salesError) throw salesError;
 
+      // Sanitize Data: Ensure all numeric fields are actually numbers (Supabase can return strings for numeric types)
+      const sanitizedPurchases = (purchasesData || []).map((p: any) => ({
+        ...p,
+        quantity: Number(p.quantity) || 0,
+        costPerUnit: Number(p.costPerUnit) || 0,
+        shippingFees: Number(p.shippingFees) || 0
+      }));
+
+      const sanitizedSales = (salesData || []).map((s: any) => ({
+        ...s,
+        quantitySold: Number(s.quantitySold) || 0,
+        salePricePerUnit: Number(s.salePricePerUnit) || 0,
+        buyerPostagePaid: Number(s.buyerPostagePaid) || 0,
+        actualPostageCost: Number(s.actualPostageCost) || 0,
+        platformFees: Number(s.platformFees) || 0
+      }));
+
       setData({
-        purchases: purchasesData as Purchase[] || [],
-        sales: salesData as Sale[] || []
+        purchases: sanitizedPurchases as Purchase[],
+        sales: sanitizedSales as Sale[]
       });
+
     } catch (err: any) {
       console.error('Error fetching data:', err);
       // specific check for missing table error (Postgres code 42P01)
       if (err.code === '42P01') {
-        setError("Database tables not found. Please run the SQL script in Supabase.");
+        setError("Database tables not found. Please run the db_setup.sql script.");
       } else if (err.message === 'Failed to fetch') {
-         setError("Connection failed. Please check your internet or Supabase URL.");
+         setError("Connection failed. Check internet or Supabase URL.");
       } else {
-        setError(err.message || 'An unknown error occurred loading data.');
+        setError(err.message || 'Unknown error loading data.');
       }
     } finally {
       setIsLoading(false);

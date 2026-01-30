@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../store';
-import { generateId, getRemainingStock } from '../utils';
+import { generateId, getRemainingStock, getTodayDate } from '../utils';
 import { PLATFORM_OPTIONS } from '../constants';
 
 interface Props {
@@ -14,7 +14,7 @@ export const AddSaleForm: React.FC<Props> = ({ onComplete }) => {
   const stockOptions = purchases.filter(p => getRemainingStock(p, sales) > 0);
 
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayDate(),
     purchaseId: '',
     platform: PLATFORM_OPTIONS[0],
     quantitySold: 1,

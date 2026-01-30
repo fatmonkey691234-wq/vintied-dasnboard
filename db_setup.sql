@@ -1,13 +1,11 @@
 -- ------------------------------------------------------------------
--- RESELL TRACKER DATABASE SETUP
+-- RESELL TRACKER DATABASE SETUP (SAFE MODE)
 -- ------------------------------------------------------------------
 -- Copy and paste this ENTIRE file into the Supabase SQL Editor.
 -- Click "Run" to set up your database.
 -- ------------------------------------------------------------------
 
--- 1. Create Tables (if they don't exist yet)
--- We use quotes "..." to ensure the column names match our React code exactly (camelCase).
-
+-- 1. Create Tables (if they don't exist)
 create table if not exists purchases (
   "id" text primary key,
   "date" text not null,
@@ -32,18 +30,26 @@ create table if not exists sales (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 2. Enable Security (Row Level Security)
+-- 2. Enable Security
 alter table purchases enable row level security;
 alter table sales enable row level security;
 
--- 3. Create Access Policies
--- We first DROP existing policies to prevent "policy already exists" errors if you run this twice.
+-- 3. Create Access Policies (Safely)
+-- We use a DO block to check if policies exist before creating them.
+-- This prevents the "policy already exists" error.
 
-drop policy if exists "Public Access Purchases" on purchases;
-create policy "Public Access Purchases" on purchases for all using (true) with check (true);
+do $$
+begin
+  -- Policy for Purchases
+  if not exists (select from pg_policies where policyname = 'Public Access Purchases' and tablename = 'purchases') then
+    create policy "Public Access Purchases" on purchases for all using (true) with check (true);
+  end if;
 
-drop policy if exists "Public Access Sales" on sales;
-create policy "Public Access Sales" on sales for all using (true) with check (true);
+  -- Policy for Sales
+  if not exists (select from pg_policies where policyname = 'Public Access Sales' and tablename = 'sales') then
+    create policy "Public Access Sales" on sales for all using (true) with check (true);
+  end if;
+end $$;
 
--- 4. Confirmation
+-- 4. Verify
 select 'Database setup completed successfully' as result;

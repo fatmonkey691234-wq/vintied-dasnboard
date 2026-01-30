@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../store';
-import { generateId } from '../utils';
+import { generateId, getTodayDate } from '../utils';
 import { DEFAULT_SUPPLIER } from '../constants';
 
 interface Props {
@@ -11,7 +11,7 @@ export const AddPurchaseForm: React.FC<Props> = ({ onComplete }) => {
   const { addPurchase } = useData();
   
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayDate(),
     supplier: DEFAULT_SUPPLIER,
     itemName: '',
     quantity: 1,
