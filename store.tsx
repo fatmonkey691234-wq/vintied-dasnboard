@@ -6,6 +6,7 @@ interface DataContextType {
   purchases: Purchase[];
   sales: Sale[];
   isLoading: boolean;
+  error: string | null; // Added error state
   addPurchase: (purchase: Purchase) => Promise<void>;
   addSale: (sale: Sale) => Promise<void>;
   deletePurchase: (id: string) => Promise<void>;
@@ -21,6 +22,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sales: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch data from Supabase on mount
   useEffect(() => {
@@ -29,27 +31,38 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchData = async () => {
     setIsLoading(true);
+    setError(null);
     try {
+      // Fetch Purchases
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('purchases')
         .select('*')
         .order('created_at', { ascending: false });
 
+      if (purchasesError) throw purchasesError;
+
+      // Fetch Sales
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (purchasesError) throw purchasesError;
       if (salesError) throw salesError;
 
       setData({
         purchases: purchasesData as Purchase[] || [],
         sales: salesData as Sale[] || []
       });
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      alert('Error connecting to the database. Please check your internet connection.');
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      // specific check for missing table error (Postgres code 42P01)
+      if (err.code === '42P01') {
+        setError("Database tables not found. Please run the SQL script in Supabase.");
+      } else if (err.message === 'Failed to fetch') {
+         setError("Connection failed. Please check your internet or Supabase URL.");
+      } else {
+        setError(err.message || 'An unknown error occurred loading data.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,15 +70,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addPurchase = async (purchase: Purchase) => {
     try {
-      // Optimistic update (update UI immediately)
+      // Optimistic update
       setData(prev => ({ ...prev, purchases: [purchase, ...prev.purchases] }));
 
       const { error } = await supabase.from('purchases').insert([purchase]);
       if (error) throw error;
-    } catch (error) {
-      console.error('Error adding purchase:', error);
-      alert('Failed to save purchase to database.');
-      fetchData(); // Revert to server state on error
+    } catch (err: any) {
+      console.error('Error adding purchase:', err);
+      alert(`Failed to save: ${err.message}`);
+      fetchData(); // Revert to server state
     }
   };
 
@@ -75,9 +88,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { error } = await supabase.from('sales').insert([sale]);
       if (error) throw error;
-    } catch (error) {
-      console.error('Error adding sale:', error);
-      alert('Failed to save sale to database.');
+    } catch (err: any) {
+      console.error('Error adding sale:', err);
+      alert(`Failed to save: ${err.message}`);
       fetchData();
     }
   };
@@ -92,9 +105,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const { error } = await supabase.from('purchases').delete().eq('id', id);
         if (error) throw error;
-      } catch (error) {
-        console.error('Error deleting purchase:', error);
-        alert('Failed to delete purchase.');
+      } catch (err: any) {
+        console.error('Error deleting purchase:', err);
+        alert('Failed to delete.');
         fetchData();
       }
     }
@@ -110,9 +123,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const { error } = await supabase.from('sales').delete().eq('id', id);
         if (error) throw error;
-      } catch (error) {
-        console.error('Error deleting sale:', error);
-        alert('Failed to delete sale.');
+      } catch (err: any) {
+        console.error('Error deleting sale:', err);
+        alert('Failed to delete.');
         fetchData();
       }
     }
@@ -123,20 +136,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setData({ purchases: [], sales: [] });
 
-        // Delete all rows where id is not null (effectively all rows)
         const { error: pError } = await supabase.from('purchases').delete().neq('id', '0');
         const { error: sError } = await supabase.from('sales').delete().neq('id', '0');
 
-        if (pError || sError) throw new Error('Failed to reset database');
-      } catch (error) {
-        console.error('Error resetting data:', error);
+        if (pError) throw pError;
+        if (sError) throw sError;
+      } catch (err: any) {
+        console.error('Error resetting data:', err);
+        alert('Failed to reset database: ' + err.message);
         fetchData();
       }
     }
   };
 
   return (
-    <DataContext.Provider value={{ ...data, isLoading, addPurchase, addSale, deletePurchase, deleteSale, resetData }}>
+    <DataContext.Provider value={{ ...data, isLoading, error, addPurchase, addSale, deletePurchase, deleteSale, resetData }}>
       {children}
     </DataContext.Provider>
   );

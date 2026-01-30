@@ -2,7 +2,7 @@ import React from 'react';
 import { useData } from '../store';
 import { TAX_YEAR_START, TAX_YEAR_END, TRADING_ALLOWANCE_LIMIT } from '../constants';
 import { isInTaxYear, formatCurrency } from '../utils';
-import { TrendingUp, ShoppingBag, Package, AlertCircle, Info, Tag } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Package, AlertCircle, Info, Tag, PlusCircle } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const { purchases, sales } = useData();
@@ -12,31 +12,23 @@ export const Dashboard: React.FC = () => {
   const yearSales = sales.filter(s => isInTaxYear(s.date, TAX_YEAR_START, TAX_YEAR_END));
 
   // --- CALCULATIONS (Cash Basis) ---
-  
-  // 1. Total Sales Revenue (Money In)
-  // Revenue = (Sale Price * Qty) + Postage money received from buyer
   const totalRevenue = yearSales.reduce((sum, s) => {
     return sum + (Number(s.salePricePerUnit) * Number(s.quantitySold)) + Number(s.buyerPostagePaid);
   }, 0);
 
-  // 2. Cost of Goods (Cash Basis: Money spent on stock THIS YEAR)
   const totalStockCost = yearPurchases.reduce((sum, p) => {
     return sum + (Number(p.costPerUnit) * Number(p.quantity)) + Number(p.shippingFees);
   }, 0);
 
-  // 3. Selling Expenses (Fees + Actual Postage Paid)
   const totalSellingExpenses = yearSales.reduce((sum, s) => {
     return sum + Number(s.platformFees) + Number(s.actualPostageCost);
   }, 0);
 
-  // 4. Net Profit (Cash Basis)
   const netProfit = totalRevenue - totalStockCost - totalSellingExpenses;
-
-  // 5. Total Items Sold Count
   const itemsSold = yearSales.reduce((sum, s) => sum + Number(s.quantitySold), 0);
-
-  // 6. Trading Allowance Progress
   const tradingAllowancePercent = Math.min((totalRevenue / TRADING_ALLOWANCE_LIMIT) * 100, 100);
+
+  const isEmpty = purchases.length === 0 && sales.length === 0;
 
   return (
     <div className="space-y-6">
@@ -97,6 +89,18 @@ export const Dashboard: React.FC = () => {
           <p className="text-xs text-slate-400 mt-1">Total Units Shipped</p>
         </div>
       </div>
+
+      {isEmpty && (
+        <div className="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
+          <div className="mx-auto w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-3">
+            <PlusCircle className="text-slate-400" />
+          </div>
+          <h3 className="text-lg font-medium text-slate-900">No data found</h3>
+          <p className="text-slate-500 max-w-sm mx-auto mb-4">
+            It looks like you haven't added any purchases or sales yet. Start by adding your first purchase.
+          </p>
+        </div>
+      )}
 
       {/* Trading Allowance Section */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">

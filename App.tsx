@@ -6,12 +6,12 @@ import { AddSaleForm } from './components/AddSaleForm';
 import { ItemsTable } from './components/ItemsTable';
 import { HMRCView } from './components/HMRCView';
 import { ViewState } from './types';
-import { LayoutDashboard, PlusCircle, ShoppingCart, Table2, FileText, Menu, X, Trash, Loader2 } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ShoppingCart, Table2, FileText, Menu, X, Trash, Loader2, AlertTriangle, Database } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const [view, setView] = useState<ViewState>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { resetData, isLoading } = useData();
+  const { resetData, isLoading, error } = useData();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -32,6 +32,42 @@ const AppContent: React.FC = () => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
           <p className="text-slate-500 font-medium">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- CRITICAL ERROR STATE ---
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white max-w-md w-full p-8 rounded-lg shadow-lg border-l-4 border-rose-600">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-8 h-8 text-rose-600" />
+            <h1 className="text-xl font-bold text-slate-800">Database Connection Error</h1>
+          </div>
+          <p className="text-slate-600 mb-6 font-medium">
+             {error}
+          </p>
+          
+          <div className="bg-slate-50 p-4 rounded text-sm text-slate-700 mb-6 border border-slate-200">
+             <div className="flex items-center gap-2 font-bold mb-2">
+               <Database className="w-4 h-4"/> How to fix:
+             </div>
+             <ol className="list-decimal list-inside space-y-2">
+               <li>Open the file <code>db_setup.sql</code> in your project.</li>
+               <li>Copy all the code from that file.</li>
+               <li>Go to your Supabase Dashboard &gt; SQL Editor.</li>
+               <li>Paste the code and click <strong>Run</strong>.</li>
+             </ol>
+          </div>
+
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded transition-colors"
+          >
+            I've run the SQL - Try Again
+          </button>
         </div>
       </div>
     );
@@ -81,7 +117,7 @@ const AppContent: React.FC = () => {
             <Trash className="w-3 h-3" /> Reset All Database
           </button>
           <div className="text-center text-xs text-slate-500">
-            v1.2 • Supabase Cloud
+            v1.3.1 • Supabase Connected
           </div>
         </div>
       </aside>
