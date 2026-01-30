@@ -50,7 +50,7 @@ export const Dashboard: React.FC = () => {
           <p>
             This dashboard uses <strong>Cash Basis Accounting</strong>. 
             It compares money received vs. money spent <em>within these dates</em>. 
-            If you just bought stock but haven't sold it yet, your profit may look low or negative. This is normal for tax purposes.
+            Profit = Total Revenue - (Total Stock Bought + Fees + Postage).
           </p>
         </div>
       </div>
@@ -110,9 +110,13 @@ export const Dashboard: React.FC = () => {
           ></div>
         </div>
         
-        <div className="flex justify-between text-xs text-slate-500">
+        <div className="flex justify-between text-xs text-slate-500 mt-2">
           <span>{formatCurrency(totalRevenue)} earned</span>
-          <span>{tradingAllowancePercent >= 100 ? 'Limit Reached' : `${(100 - tradingAllowancePercent).toFixed(1)}% remaining`}</span>
+          <span>
+            {tradingAllowancePercent >= 100 
+              ? 'Limit Reached' 
+              : `${formatCurrency(TRADING_ALLOWANCE_LIMIT - totalRevenue)} remaining`}
+          </span>
         </div>
 
         {totalRevenue > TRADING_ALLOWANCE_LIMIT && (

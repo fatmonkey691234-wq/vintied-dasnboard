@@ -10,19 +10,21 @@ export const ItemsTable: React.FC = () => {
   const getBatchStats = (purchaseId: string, quantityBought: number, unitCost: number, shipping: number) => {
     const linkedSales = sales.filter(s => s.purchaseId === purchaseId);
     
-    const quantitySold = linkedSales.reduce((sum, s) => sum + s.quantitySold, 0);
+    const quantitySold = linkedSales.reduce((sum, s) => sum + Number(s.quantitySold), 0);
     const quantityLeft = quantityBought - quantitySold;
     
     // Revenue from these items
-    const revenue = linkedSales.reduce((sum, s) => sum + (s.salePricePerUnit * s.quantitySold) + s.buyerPostagePaid, 0);
+    const revenue = linkedSales.reduce((sum, s) => {
+      return sum + (Number(s.salePricePerUnit) * Number(s.quantitySold)) + Number(s.buyerPostagePaid);
+    }, 0);
     
     // Expenses directly linked to these sales (platform fees + postage out)
-    const saleExpenses = linkedSales.reduce((sum, s) => sum + s.platformFees + s.actualPostageCost, 0);
+    const saleExpenses = linkedSales.reduce((sum, s) => {
+      return sum + Number(s.platformFees) + Number(s.actualPostageCost);
+    }, 0);
     
-    // Cost of goods for the WHOLE batch (Cash Basis approach)
-    // Or we could do Accrual (only cost of sold items). 
-    // Let's show "Profit So Far" = Revenue - (All Purchase Costs + Sale Expenses)
-    const totalBatchCost = (unitCost * quantityBought) + shipping;
+    // Cost of goods for the WHOLE batch (Cash Basis approach for simplicity here)
+    const totalBatchCost = (Number(unitCost) * Number(quantityBought)) + Number(shipping);
     
     const profit = revenue - totalBatchCost - saleExpenses;
 

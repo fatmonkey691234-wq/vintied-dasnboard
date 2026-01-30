@@ -12,15 +12,22 @@ export const HMRCView: React.FC = () => {
   const yearSales = sales.filter(s => isInTaxYear(s.date, TAX_YEAR_START, TAX_YEAR_END));
 
   // --- HMRC CASH BASIS CALCULATIONS ---
+  
   // Income: Total money received (Sales + Postage charged to buyer)
-  const totalIncome = yearSales.reduce((sum, s) => sum + (s.salePricePerUnit * s.quantitySold) + s.buyerPostagePaid, 0);
+  const totalIncome = yearSales.reduce((sum, s) => {
+    return sum + (Number(s.salePricePerUnit) * Number(s.quantitySold)) + Number(s.buyerPostagePaid);
+  }, 0);
 
   // Expenses: 
   // 1. All stock bought in this period (even if not sold yet, under simple cash basis)
-  const stockExpenses = yearPurchases.reduce((sum, p) => sum + (p.costPerUnit * p.quantity) + p.shippingFees, 0);
+  const stockExpenses = yearPurchases.reduce((sum, p) => {
+    return sum + (Number(p.costPerUnit) * Number(p.quantity)) + Number(p.shippingFees);
+  }, 0);
   
   // 2. Allowable expenses linked to sales (Platform fees, postage paid)
-  const operationExpenses = yearSales.reduce((sum, s) => sum + s.platformFees + s.actualPostageCost, 0);
+  const operationExpenses = yearSales.reduce((sum, s) => {
+    return sum + Number(s.platformFees) + Number(s.actualPostageCost);
+  }, 0);
 
   const totalExpenses = stockExpenses + operationExpenses;
   const netProfit = totalIncome - totalExpenses;
@@ -35,14 +42,14 @@ export const HMRCView: React.FC = () => {
 
     // Add Purchases (Money Out)
     yearPurchases.forEach(p => {
-      const cost = (p.costPerUnit * p.quantity) + p.shippingFees;
+      const cost = (Number(p.costPerUnit) * Number(p.quantity)) + Number(p.shippingFees);
       csvContent += `Purchase,${p.date},"${p.itemName} (x${p.quantity}) from ${p.supplier}",,${cost.toFixed(2)}\n`;
     });
 
     // Add Sales (Money In & Fees Out)
     yearSales.forEach(s => {
-      const revenue = (s.salePricePerUnit * s.quantitySold) + s.buyerPostagePaid;
-      const expenses = s.platformFees + s.actualPostageCost;
+      const revenue = (Number(s.salePricePerUnit) * Number(s.quantitySold)) + Number(s.buyerPostagePaid);
+      const expenses = Number(s.platformFees) + Number(s.actualPostageCost);
       const itemName = purchases.find(p => p.id === s.purchaseId)?.itemName || "Unknown Item";
       
       // Row for the sale revenue
@@ -95,7 +102,7 @@ export const HMRCView: React.FC = () => {
 
       {/* Trading Allowance Note */}
       <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg text-sm text-blue-800">
-        <strong>Information Note:</strong> If your Total Income (Trading Income) is <strong>£1,000 or less</strong>, you generally do not need to register for Self Assessment due to the UK Trading Allowance. If it is over £1,000, you must register.
+        <strong>Information Note:</strong> If your Total Income (Turnover) is <strong>£1,000 or less</strong>, you generally do not need to register for Self Assessment due to the UK Trading Allowance. If it is over £1,000, you must register.
         <br/><br/>
         <em>This app is for record-keeping only and does not constitute legal or financial advice.</em>
       </div>

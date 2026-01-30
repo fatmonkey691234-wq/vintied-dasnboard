@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { DataProvider } from './store';
+import { DataProvider, useData } from './store';
 import { Dashboard } from './components/Dashboard';
 import { AddPurchaseForm } from './components/AddPurchaseForm';
 import { AddSaleForm } from './components/AddSaleForm';
 import { ItemsTable } from './components/ItemsTable';
 import { HMRCView } from './components/HMRCView';
 import { ViewState } from './types';
-import { LayoutDashboard, PlusCircle, ShoppingCart, Table2, FileText, Menu, X } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ShoppingCart, Table2, FileText, Menu, X, Trash } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const [view, setView] = useState<ViewState>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { resetData } = useData();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -61,9 +62,15 @@ const AppContent: React.FC = () => {
           })}
         </nav>
         
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="bg-slate-800 p-4 rounded-lg text-xs text-slate-400">
-            <p>Data saved to browser.</p>
+        <div className="absolute bottom-6 left-6 right-6 space-y-2">
+          <button 
+            onClick={resetData}
+            className="w-full flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-900 text-slate-400 hover:text-white rounded-lg text-xs transition-colors"
+          >
+            <Trash className="w-3 h-3" /> Reset All Data
+          </button>
+          <div className="text-center text-xs text-slate-500">
+            v1.1 • Local Storage
           </div>
         </div>
       </aside>
