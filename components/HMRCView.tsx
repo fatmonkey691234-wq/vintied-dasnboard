@@ -1,6 +1,6 @@
 import React from 'react';
 import { useData } from '../store';
-import { TAX_YEAR_START, TAX_YEAR_END, TRADING_ALLOWANCE_LIMIT } from '../constants';
+import { TAX_YEAR_START, TAX_YEAR_END } from '../constants';
 import { isInTaxYear, formatCurrency } from '../utils';
 import { Download, ShieldCheck } from 'lucide-react';
 

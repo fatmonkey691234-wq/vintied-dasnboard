@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useData } from '../store';
 import { generateId } from '../utils';
 import { DEFAULT_SUPPLIER } from '../constants';
-import { ViewState } from '../types';
 
 interface Props {
   onComplete: () => void;
