@@ -6,12 +6,12 @@ import { AddSaleForm } from './components/AddSaleForm';
 import { ItemsTable } from './components/ItemsTable';
 import { HMRCView } from './components/HMRCView';
 import { ViewState } from './types';
-import { LayoutDashboard, PlusCircle, ShoppingCart, Table2, FileText, Menu, X, Trash } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ShoppingCart, Table2, FileText, Menu, X, Trash, Loader2 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const [view, setView] = useState<ViewState>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { resetData } = useData();
+  const { resetData, isLoading } = useData();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -25,6 +25,17 @@ const AppContent: React.FC = () => {
     setView(v as ViewState);
     setIsMobileMenuOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-slate-500 font-medium">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -67,10 +78,10 @@ const AppContent: React.FC = () => {
             onClick={resetData}
             className="w-full flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-900 text-slate-400 hover:text-white rounded-lg text-xs transition-colors"
           >
-            <Trash className="w-3 h-3" /> Reset All Data
+            <Trash className="w-3 h-3" /> Reset All Database
           </button>
           <div className="text-center text-xs text-slate-500">
-            v1.1 • Local Storage
+            v1.2 • Supabase Cloud
           </div>
         </div>
       </aside>

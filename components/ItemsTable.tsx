@@ -26,15 +26,21 @@ export const ItemsTable: React.FC = () => {
     // Cost of goods for the WHOLE batch (Cash Basis approach for simplicity here)
     const totalBatchCost = (Number(unitCost) * Number(quantityBought)) + Number(shipping);
     
-    const profit = revenue - totalBatchCost - saleExpenses;
+    const totalProfit = revenue - totalBatchCost - saleExpenses;
+    
+    // Calculate average profit per unit SOLD (if any sold)
+    // We assume the cost of unsold items is a "loss" until sold, but for per-unit stats, we often want to see potential.
+    // However, purely based on realized gains:
+    const profitPerUnit = quantitySold > 0 ? (totalProfit / quantitySold) : 0;
 
-    return { quantitySold, quantityLeft, profit };
+    return { quantitySold, quantityLeft, totalProfit, profitPerUnit };
   };
 
   if (purchases.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
         <p className="text-slate-500">No purchases recorded yet.</p>
+        <p className="text-sm text-slate-400 mt-2">Go to "Add Purchase" to get started.</p>
       </div>
     );
   }
@@ -50,8 +56,9 @@ export const ItemsTable: React.FC = () => {
               <th className="p-4">Bought</th>
               <th className="p-4">Cost/Unit</th>
               <th className="p-4">Sold</th>
-              <th className="p-4">Remaining</th>
-              <th className="p-4">Profit (Batch)</th>
+              <th className="p-4">Left</th>
+              <th className="p-4">Profit (Total)</th>
+              <th className="p-4">Avg Profit/Unit</th>
               <th className="p-4 text-center">Action</th>
             </tr>
           </thead>
@@ -70,8 +77,11 @@ export const ItemsTable: React.FC = () => {
                       {stats.quantityLeft}
                     </span>
                   </td>
-                  <td className={`p-4 font-bold ${stats.profit >= 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {formatCurrency(stats.profit)}
+                  <td className={`p-4 font-bold ${stats.totalProfit >= 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {formatCurrency(stats.totalProfit)}
+                  </td>
+                  <td className={`p-4 ${stats.quantitySold > 0 ? 'text-slate-700' : 'text-slate-300'}`}>
+                    {stats.quantitySold > 0 ? formatCurrency(stats.profitPerUnit) : '-'}
                   </td>
                   <td className="p-4 text-center">
                     <button 
